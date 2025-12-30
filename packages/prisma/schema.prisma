@@ -1,0 +1,206 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  telegramId    BigInt   @unique
+  firstName     String?
+  lastName      String?
+  username      String?
+  languageCode  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  rsvps         RSVP[]
+  hostedEvents  EventHostRole[]
+  checkIns      CheckIn[]
+
+  @@index([telegramId])
+}
+
+model Event {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  title           String
+  description     String?  @db.Text
+  coverImageUrl   String?
+  startDate       DateTime
+  endDate         DateTime?
+  timezone        String   @default("UTC")
+  location        String?
+  locationType    LocationType @default(ONLINE)
+  onlineLink      String?
+  capacity        Int?
+  priceType       PriceType @default(FREE)
+  priceAmount     Decimal? @db.Decimal(10, 2)
+  priceCurrency   String?  @default("USD")
+  isPublic        Boolean  @default(true)
+  status          EventStatus @default(DRAFT)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hostRoles       EventHostRole[]
+  rsvps           RSVP[]
+  questions       EventQuestion[]
+  media           EventMedia[]
+  checkIns        CheckIn[]
+
+  @@index([slug])
+  @@index([startDate])
+  @@index([status])
+}
+
+model EventHostRole {
+  id        String   @id @default(uuid())
+  eventId   String
+  userId    String
+  role      HostRole @default(HOST)
+  createdAt DateTime @default(now())
+
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+}
+
+model RSVP {
+  id            String   @id @default(uuid())
+  eventId       String
+  userId        String
+  status        RSVPStatus @default(CONFIRMED)
+  guestCount    Int      @default(1)
+  name          String?
+  email         String?
+  phone         String?
+  consentGiven  Boolean  @default(false)
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers       RSVPAnswer[]
+  checkIns      CheckIn[]
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
+}
+
+model RSVPAnswer {
+  id        String   @id @default(uuid())
+  rsvpId    String
+  questionId String
+  answer    String   @db.Text
+  createdAt DateTime @default(now())
+
+  rsvp      RSVP     @relation(fields: [rsvpId], references: [id], onDelete: Cascade)
+  question  EventQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([rsvpId, questionId])
+  @@index([rsvpId])
+  @@index([questionId])
+}
+
+model EventQuestion {
+  id          String   @id @default(uuid())
+  eventId     String
+  question     String
+  type        QuestionType @default(TEXT)
+  isRequired  Boolean  @default(false)
+  options     String?  @db.Text // JSON array for SELECT/MULTIPLE_CHOICE
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  answers     RSVPAnswer[]
+
+  @@index([eventId])
+}
+
+model CheckIn {
+  id        String   @id @default(uuid())
+  eventId   String
+  rsvpId    String
+  userId    String
+  checkedInBy String // User ID of staff/host who checked in
+  checkedInAt DateTime @default(now())
+
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rsvp      RSVP     @relation(fields: [rsvpId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([rsvpId])
+  @@index([eventId])
+  @@index([rsvpId])
+}
+
+model EventMedia {
+  id        String   @id @default(uuid())
+  eventId   String
+  url       String
+  type      MediaType @default(IMAGE)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+enum LocationType {
+  ONLINE
+  IN_PERSON
+  HYBRID
+}
+
+enum PriceType {
+  FREE
+  PAID
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum HostRole {
+  HOST
+  STAFF
+}
+
+enum RSVPStatus {
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+}
+
+enum QuestionType {
+  TEXT
+  EMAIL
+  PHONE
+  NUMBER
+  SELECT
+  MULTIPLE_CHOICE
+  CHECKBOX
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
