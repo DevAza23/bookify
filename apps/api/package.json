@@ -13,7 +13,6 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "postinstall": "cd ../../packages/prisma && npx prisma generate",
     "seed": "cd ../../packages/prisma && npm run db:seed"
   },
   "dependencies": {

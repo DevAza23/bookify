@@ -59,7 +59,7 @@ export class EventsService {
     return event;
   }
 
-  async findAll(filters?: { status?: EventStatus; userId?: string }) {
+  async findAll(filters?: { status?: string; userId?: string }) {
     const where: any = {};
 
     if (filters?.status) {
