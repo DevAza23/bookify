@@ -2,7 +2,13 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { EventStatus, LocationType, PriceType } from '@prisma/client';
+
+export enum EventStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+}
 
 @Injectable()
 export class EventsService {
@@ -18,8 +24,8 @@ export class EventsService {
         slug,
         startDate: new Date(dto.startDate),
         endDate: dto.endDate ? new Date(dto.endDate) : null,
-        locationType: dto.locationType || LocationType.ONLINE,
-        priceType: dto.priceType || PriceType.FREE,
+        locationType: (dto.locationType as any) || 'ONLINE',
+        priceType: (dto.priceType as any) || 'FREE',
         isPublic: dto.isPublic ?? true,
         status: 'PUBLISHED',
         questions: dto.questions

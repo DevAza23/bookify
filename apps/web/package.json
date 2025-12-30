@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "cd ../../packages/prisma && npm install && npx prisma generate || true"
   },
   "dependencies": {
     "@telegram-apps/sdk": "^1.0.0",
@@ -33,4 +34,3 @@
     "typescript": "^5.3.3"
   }
 }
-

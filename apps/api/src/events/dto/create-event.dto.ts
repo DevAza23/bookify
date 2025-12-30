@@ -1,6 +1,16 @@
 import { IsString, IsOptional, IsDateString, IsInt, IsEnum, IsBoolean, IsArray, ValidateNested, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { LocationType, PriceType } from '@prisma/client';
+
+export enum LocationType {
+  ONLINE = 'ONLINE',
+  IN_PERSON = 'IN_PERSON',
+  HYBRID = 'HYBRID',
+}
+
+export enum PriceType {
+  FREE = 'FREE',
+  PAID = 'PAID',
+}
 
 export class CreateEventQuestionDto {
   @IsString()
