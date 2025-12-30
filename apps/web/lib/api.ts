@@ -144,4 +144,3 @@ export async function checkIn(eventId: string, rsvpId: string) {
   const response = await api.post(`/events/${eventId}/checkin`, { rsvpId })
   return response.data
 }
-

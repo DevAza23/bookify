@@ -9,7 +9,6 @@
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=apps/web\" \"npm run start:dev --workspace=apps/api\"",
     "build": "npm run build --workspace=apps/web && npm run build --workspace=apps/api",
-    "build:vercel": "cd packages/prisma && npm install --no-save --no-audit --no-fund && npx prisma generate && cd ../../apps/web && npm install --no-audit --no-fund && npm run build",
     "test": "npm run test --workspace=apps/api"
   },
   "devDependencies": {

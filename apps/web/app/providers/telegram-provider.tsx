@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { initDataRaw, initData, themeParams, viewport } from '@telegram-apps/sdk'
 
 interface TelegramContextType {
   initData: any
@@ -61,11 +60,31 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
             tg.themeParams.button_text_color || '#ffffff'
           )
         }
+      } else {
+        // Fallback for non-Telegram environments
+        setTelegramData({
+          initData: null,
+          themeParams: null,
+          viewport: null,
+          isReady: true,
+        })
       }
     }
 
+    script.onerror = () => {
+      // Fallback if script fails to load
+      setTelegramData({
+        initData: null,
+        themeParams: null,
+        viewport: null,
+        isReady: true,
+      })
+    }
+
     return () => {
-      document.head.removeChild(script)
+      if (script.parentNode) {
+        script.parentNode.removeChild(script)
+      }
     }
   }, [])
 
@@ -83,4 +102,3 @@ export function useTelegram() {
   }
   return context
 }
-
