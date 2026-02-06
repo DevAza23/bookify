@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Param, UseGuards, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { HostOrStaffGuard } from '../auth/guards/host-or-staff.guard';
@@ -17,7 +17,7 @@ export class CheckInController {
     });
 
     if (!rsvp || rsvp.eventId !== eventId) {
-      throw new Error('RSVP not found or does not belong to this event');
+      throw new NotFoundException('RSVP not found or does not belong to this event');
     }
 
     // Check if already checked in
