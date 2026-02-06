@@ -13,6 +13,7 @@ describe('RSVPService', () => {
     },
     rSVP: {
       findUnique: jest.fn(),
+      findMany: jest.fn(),
       upsert: jest.fn(),
     },
   };
@@ -51,7 +52,6 @@ describe('RSVPService', () => {
       mockPrismaService.event.findUnique.mockResolvedValue({
         id: 'event-id',
         status: 'DRAFT',
-        _count: { rsvps: 0 },
       });
 
       await expect(
@@ -66,12 +66,16 @@ describe('RSVPService', () => {
         id: 'event-id',
         status: 'PUBLISHED',
         capacity: 100,
-        _count: { rsvps: 10 },
         questions: [],
       };
 
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
       mockPrismaService.rSVP.findUnique.mockResolvedValue(null);
+      mockPrismaService.rSVP.findMany.mockResolvedValue([
+        { guestCount: 5 },
+        { guestCount: 3 },
+        { guestCount: 2 },
+      ]); // Total: 10 guests confirmed
       mockPrismaService.rSVP.upsert.mockResolvedValue({
         id: 'rsvp-id',
         eventId: 'event-id',

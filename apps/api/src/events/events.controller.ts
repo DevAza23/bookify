@@ -35,23 +35,6 @@ export class EventsController {
     });
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(id);
-  }
-
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, HostGuard)
-  update(@Param('id') id: string, @CurrentUser() user: any, @Body() updateEventDto: UpdateEventDto) {
-    return this.eventsService.update(id, user.userId, updateEventDto);
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, HostGuard)
-  remove(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.eventsService.remove(id, user.userId);
-  }
-
   @Get(':id/attendees')
   @UseGuards(JwtAuthGuard, HostOrStaffGuard)
   getAttendees(@Param('id') id: string, @CurrentUser() user: any) {
@@ -90,6 +73,23 @@ export class EventsController {
       csv,
       filename: `${event.slug}-attendees-${new Date().toISOString().split('T')[0]}.csv`,
     };
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.eventsService.findOne(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, HostGuard)
+  update(@Param('id') id: string, @CurrentUser() user: any, @Body() updateEventDto: UpdateEventDto) {
+    return this.eventsService.update(id, user.userId, updateEventDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, HostGuard)
+  remove(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.eventsService.remove(id, user.userId);
   }
 }
 

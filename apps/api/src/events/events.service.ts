@@ -16,7 +16,8 @@ export class EventsService {
 
   async create(userId: string, dto: CreateEventDto) {
     // Generate slug from title
-    const slug = this.generateSlug(dto.title);
+    const baseSlug = this.generateSlug(dto.title);
+    const slug = await this.ensureUniqueSlug(baseSlug);
 
     const event = await this.prisma.event.create({
       data: {
@@ -240,12 +241,19 @@ export class EventsService {
       throw new ForbiddenException('Only event hosts can view analytics');
     }
 
-    const [totalRSVPs, confirmedRSVPs, waitlistedRSVPs, checkedIn] = await Promise.all([
+    const [totalRSVPs, confirmedRSVPs, waitlistedRSVPs, checkedIn, confirmedRsvpData] = await Promise.all([
       this.prisma.rSVP.count({ where: { eventId } }),
       this.prisma.rSVP.count({ where: { eventId, status: 'CONFIRMED' } }),
       this.prisma.rSVP.count({ where: { eventId, status: 'WAITLISTED' } }),
       this.prisma.checkIn.count({ where: { eventId } }),
+      this.prisma.rSVP.findMany({ 
+        where: { eventId, status: 'CONFIRMED' },
+        select: { guestCount: true }
+      }),
     ]);
+
+    // Calculate total spots taken (sum of all guestCounts)
+    const totalConfirmedSpots = confirmedRsvpData.reduce((sum, rsvp) => sum + rsvp.guestCount, 0);
 
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
@@ -258,7 +266,7 @@ export class EventsService {
       waitlistedRSVPs,
       checkedIn,
       capacity: event?.capacity,
-      availableSpots: event?.capacity ? event.capacity - confirmedRSVPs : null,
+      availableSpots: event?.capacity ? event.capacity - totalConfirmedSpots : null,
     };
   }
 
@@ -268,5 +276,18 @@ export class EventsService {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
       .substring(0, 100);
+  }
+
+  private async ensureUniqueSlug(baseSlug: string): Promise<string> {
+    let slug = baseSlug;
+    let counter = 1;
+
+    // Check if slug already exists
+    while (await this.prisma.event.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    return slug;
   }
 }
