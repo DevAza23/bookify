@@ -41,17 +41,17 @@ export class RSVPService {
     let status: 'CONFIRMED' | 'WAITLISTED' = 'CONFIRMED';
     const guestCount = dto.guestCount || 1;
     
-    // Calculate total confirmed spots (sum of all guestCounts)
-    const confirmedRsvps = await this.prisma.rSVP.findMany({
+    // Calculate total confirmed spots (sum of all guestCounts) using aggregation
+    const aggregate = await this.prisma.rSVP.aggregate({
       where: {
         eventId,
         status: 'CONFIRMED',
       },
-      select: {
+      _sum: {
         guestCount: true,
       },
     });
-    const currentConfirmed = confirmedRsvps.reduce((sum, rsvp) => sum + rsvp.guestCount, 0);
+    const currentConfirmed = aggregate._sum.guestCount || 0;
     const capacity = event.capacity;
 
     if (capacity && currentConfirmed + guestCount > capacity) {

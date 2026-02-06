@@ -241,19 +241,19 @@ export class EventsService {
       throw new ForbiddenException('Only event hosts can view analytics');
     }
 
-    const [totalRSVPs, confirmedRSVPs, waitlistedRSVPs, checkedIn, confirmedRsvpData] = await Promise.all([
+    const [totalRSVPs, confirmedRSVPs, waitlistedRSVPs, checkedIn, confirmedSpotsAggregate] = await Promise.all([
       this.prisma.rSVP.count({ where: { eventId } }),
       this.prisma.rSVP.count({ where: { eventId, status: 'CONFIRMED' } }),
       this.prisma.rSVP.count({ where: { eventId, status: 'WAITLISTED' } }),
       this.prisma.checkIn.count({ where: { eventId } }),
-      this.prisma.rSVP.findMany({ 
+      this.prisma.rSVP.aggregate({ 
         where: { eventId, status: 'CONFIRMED' },
-        select: { guestCount: true }
+        _sum: { guestCount: true }
       }),
     ]);
 
-    // Calculate total spots taken (sum of all guestCounts)
-    const totalConfirmedSpots = confirmedRsvpData.reduce((sum, rsvp) => sum + rsvp.guestCount, 0);
+    // Get total spots taken from aggregation
+    const totalConfirmedSpots = confirmedSpotsAggregate._sum.guestCount || 0;
 
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
